@@ -20,7 +20,7 @@
 
 #define CS8(X) (X<<8)|(X>>56)
 
-#define MUL(A, B, C) do { \
+#define __MUL(A, B, C) do { \
 	uint64_t b = B; \
 	uint64_t r1 = A&b; \
 	b = CS8(b); \
@@ -44,9 +44,16 @@
 	r1 = MIX2(r1, r3); \
 	r5 = MIX2(r5, r7); \
 	r1 = MIX4(r1, r5); \
-	SHIFT(r1); \
-	C = r1; } while(0);
-                       
+	SHIFT(r1);  \
+	C = r1; } while(0)
+
+#define MUL(A, B, C) do { \
+	uint64_t __MUL_a = A; \
+	uint64_t __MUL_b = B; \
+	uint64_t __MUL_c ; \
+	__MUL(__MUL_a, __MUL_b, __MUL_c); \
+	C = __MUL_c; } while(0)
+
 
 
 void print_matrix(uint64_t a){
@@ -65,10 +72,9 @@ uint64_t mul_mat(uint64_t a, uint64_t b){
 	return res;
 }
 
-
 uint64_t slow_select(int i, int j, uint64_t a){
 	int shift = i*8+j;
-	return (a<<shift)>>(63-shift);
+	return (a<<shift)>>63;
 }
 
 void slow_set_or(int i, int j, uint64_t* a, uint64_t v){
@@ -90,6 +96,7 @@ uint64_t slow_mul(uint64_t a, uint64_t b){
 int test_mul(uint64_t a, uint64_t b){
 	uint64_t res1, res2;
 	//res1 = mul_mat(a, b);
+	res1 = 0;
 	MUL(a, b, res1);
 	res2 = slow_mul(a, b);
 	if(res1!=res2){
@@ -119,17 +126,12 @@ uint64_t random_matrix(){
 	return a^b^c^d;
 }
 
+/*
 int main(){
 	srand(time(NULL));
 	uint64_t x = random_matrix();
 	uint64_t y = random_matrix();
 	test_mul(x, y);
-	uint64_t r;;
-	MUL(x, y, r);
-	print_matrix(x);
-	printf("--------------\n");
-	print_matrix(y);
-	printf("--------------\n");
-	print_matrix(r); 
 	return 0;
 }
+*/
